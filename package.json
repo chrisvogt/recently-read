@@ -1,0 +1,60 @@
+{
+	"name": "recently-read",
+	"version": "1.0.0",
+	"description": "Microservice to get recently read books from Goodreads",
+	"license": "MIT",
+	"private": true,
+	"repository": "chrisvogt/recently-read",
+	"author": {
+		"name": "Chris Vogt",
+		"email": "mail@chrisvogt.me",
+		"url": "https://www.chrisvogt.me"
+	},
+	"engines": {
+		"node": ">=6"
+	},
+	"scripts": {
+		"start": "micro",
+		"test": "xo && nyc ava",
+		"dev": "micro-dev"
+	},
+	"files": [
+		"index.js"
+	],
+	"keywords": [
+		"api",
+    "books",
+    "goodreads",
+    "google-books",
+    "microservice",
+    "read",
+    "read-list",
+    "reading"
+	],
+	"dependencies": {
+		"control-access": "^0.1.1",
+		"etag": "^1.8.1",
+		"micro": "^9.3.3",
+		"xml2js": "^0.4.19"
+	},
+	"devDependencies": {
+		"ava": "^0.25.0",
+		"codecov": "^3.0.0",
+		"delay": "^4.1.0",
+		"got": "^9.3.1",
+		"micro-dev": "^3.0.0",
+		"nock": "^10.0.1",
+		"nyc": "^13.1.0",
+		"test-listen": "^1.1.0",
+		"xo": "^0.23.0"
+	},
+	"nyc": {
+		"reporter": [
+			"lcov",
+			"text"
+		]
+	},
+	"xo": {
+		"space": true
+	}
+}

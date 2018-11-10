@@ -1,0 +1,82 @@
+'use strict';
+
+const controlAccess = require('control-access');
+const etag = require('etag');
+const got = require('got');
+const {parseString} = require('xml2js');
+
+const transformBook = require('./transform-book');
+
+const cache = `max-age=${Number(process.env.CACHE_MAX_AGE) || 300}`;
+const MAX_BOOKS = Number(process.env.MAX_REPOS) || 10;
+const {
+  ACCESS_ALLOW_ORIGIN: origin,
+  GOODREADS_API_KEY,
+  GOOGLE_BOOKS_API_KEY
+} = process.env;
+
+const ONE_DAY = 1000 * 60 * 60 * 24;
+
+if (!GOODREADS_API_KEY) {
+  throw new Error('Please set your Goodreads token in the `GOODREADS_API_KEY` environment variable');
+}
+
+if (!GOOGLE_BOOKS_API_KEY) {
+  throw new Error('Please set your Google token in the `GOOGLE_BOOKS_API_KEY` environment variable');
+}
+
+if (!origin) {
+  throw new Error('Please set the `access-control-allow-origin` you want in the `ACCESS_ALLOW_ORIGIN` environment variable');
+}
+
+let responseText = '[]';
+let responseETag = '';
+
+const GOOGLE_API = `https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key=${GOOGLE_BOOKS_API_KEY}`;
+
+async function fetchLatest() {
+  try {
+    const {body} = await got(`https://www.goodreads.com/review/list/10454947.xml?key=${GOODREADS_API_KEY}&v=2`);
+
+    const reviews = await new Promise((resolve, reject) => {
+      parseString(body, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+
+        const reviews = result.GoodreadsResponse.reviews[0].review;
+        resolve(reviews);
+      });
+    });
+
+    const isbns = reviews
+      .filter(({read_at: readAt}) => readAt.length && typeof readAt[0] === 'string')
+      .map(({book}) => book[0].isbn[0])
+      .filter(isbn => typeof isbn === 'string');
+
+    const bookPromises = isbns.map(isbn => got(GOOGLE_API.replace('{isbn}', isbn)));
+    const bookResults = await Promise.all(bookPromises);
+    const books = bookResults.map(transformBook).filter(book => Boolean(book)).slice(0, MAX_BOOKS);
+
+    responseText = JSON.stringify(books);
+    responseETag = etag(responseText);
+  } catch (error) {
+    console.log('Error fetching reviews data.', error);
+  }
+}
+
+setInterval(fetchLatest, ONE_DAY);
+fetchLatest();
+
+module.exports = (request, response) => {
+  controlAccess()(request, response);
+  response.setHeader('cache-control', cache);
+  response.setHeader('etag', responseETag);
+
+  if (request.headers.etag === responseETag) {
+    response.statusCode = 304;
+    response.end();
+    return;
+  }
+  response.end(responseText);
+};
