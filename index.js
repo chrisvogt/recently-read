@@ -12,6 +12,7 @@ const MAX_BOOKS = Number(process.env.MAX_REPOS) || 10;
 const {
   ACCESS_ALLOW_ORIGIN: origin,
   GOODREADS_API_KEY,
+  GOODREADS_LIST_ID,
   GOOGLE_BOOKS_API_KEY
 } = process.env;
 
@@ -19,6 +20,10 @@ const ONE_DAY = 1000 * 60 * 60 * 24;
 
 if (!GOODREADS_API_KEY) {
   throw new Error('Please set your Goodreads token in the `GOODREADS_API_KEY` environment variable');
+}
+
+if (!GOODREADS_LIST_ID) {
+  throw new Error('Please set the Goodreads list ID in the `GOODREADS_LIST_ID` environment variable');
 }
 
 if (!GOOGLE_BOOKS_API_KEY) {
@@ -36,7 +41,7 @@ const GOOGLE_API = `https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&ke
 
 async function fetchLatest() {
   try {
-    const {body} = await got(`https://www.goodreads.com/review/list/10454947.xml?key=${GOODREADS_API_KEY}&v=2`);
+    const {body} = await got(`https://www.goodreads.com/review/list/${GOODREADS_LIST_ID}.xml?key=${GOODREADS_API_KEY}&v=2`);
 
     const reviews = await new Promise((resolve, reject) => {
       parseString(body, (error, result) => {
