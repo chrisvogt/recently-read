@@ -16,6 +16,7 @@ const {
   GOOGLE_BOOKS_API_KEY
 } = process.env;
 
+const isString = subject => typeof subject === 'string';
 const ONE_DAY = 1000 * 60 * 60 * 24;
 
 if (!GOODREADS_API_KEY) {
@@ -55,9 +56,17 @@ async function fetchLatest() {
     });
 
     const isbns = reviews
-      .filter(({read_at: readAt}) => readAt.length && typeof readAt[0] === 'string')
-      .map(({book}) => book[0].isbn[0])
-      .filter(isbn => typeof isbn === 'string');
+      .filter(({read_at: readAt}) => {
+        const [date] = readAt;
+        return isString(date) && date.length > 3;
+      })
+      .map(({book}) => {
+        const [{isbn: isbnArr = [], isbn13: isbn13Arr = []}] = book;
+        const [isbn] = isbnArr;
+        const [isbn13] = isbn13Arr;
+        return isString(isbn) ? isbn : isString(isbn13) ? isbn13 : false;
+      })
+      .filter(isbn => isString(isbn));
 
     const bookPromises = isbns.map(isbn => got(GOOGLE_API.replace('{isbn}', isbn)));
     const bookResults = await Promise.all(bookPromises);
