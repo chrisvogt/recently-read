@@ -19,7 +19,8 @@
 		"dev": "micro-dev"
 	},
 	"files": [
-		"index.js"
+    "index.js",
+    "transform-book.js"
 	],
 	"keywords": [
 		"api",
