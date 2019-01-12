@@ -42,7 +42,7 @@ const GOOGLE_API = `https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&ke
 
 async function fetchLatest() {
   try {
-    const {body} = await got(`https://www.goodreads.com/review/list/${GOODREADS_LIST_ID}.xml?key=${GOODREADS_API_KEY}&v=2&shelf=read`);
+    const {body} = await got(`https://www.goodreads.com/review/list/${GOODREADS_LIST_ID}.xml?key=${GOODREADS_API_KEY}&v=2&shelf=read&sort=date_read`);
 
     const reviews = await new Promise((resolve, reject) => {
       parseString(body, (error, result) => {
