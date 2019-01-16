@@ -1,3 +1,5 @@
+const convertToHttps = url => url.replace(/(^http:\/\/)|(^\/\/)/, 'https://');
+
 module.exports = result => {
   const {body} = result;
   const {items = []} = JSON.parse(body);
@@ -21,10 +23,10 @@ module.exports = result => {
 
   return {
     authors,
-    infoLink,
+    infoLink: convertToHttps(infoLink),
     pageCount,
-    smallThumbnail,
-    thumbnail,
+    smallThumbnail: convertToHttps(smallThumbnail),
+    thumbnail: convertToHttps(thumbnail),
     title
   };
 };
