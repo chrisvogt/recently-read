@@ -1,6 +1,6 @@
 {
 	"name": "recently-read",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Microservice to get recently read books from Goodreads",
 	"license": "MIT",
 	"private": true,
@@ -14,7 +14,7 @@
 		"node": ">=6"
 	},
 	"scripts": {
-		"start": "micro",
+		"start": "micro --listen tcp://127.0.0.1:3001",
 		"test": "xo && nyc ava",
 		"dev": "micro-dev"
 	},
