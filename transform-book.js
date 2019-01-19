@@ -1,4 +1,4 @@
-const convertToHttps = url => url.replace(/(^http:\/\/)|(^\/\/)/, 'https://');
+const convertToHttps = require('to-https');
 
 module.exports = result => {
   const {body} = result;
