@@ -1,7 +1,7 @@
 {
 	"name": "recently-read",
-	"version": "1.0.1",
-	"description": "Microservice to get recently read books from Goodreads",
+	"version": "1.0.2",
+	"description": "A Goodreads-powered book list microservice",
 	"license": "MIT",
 	"private": true,
 	"repository": "chrisvogt/recently-read",
@@ -11,12 +11,13 @@
 		"url": "https://www.chrisvogt.me"
 	},
 	"engines": {
-		"node": ">=6"
+		"node": ">=8"
 	},
 	"scripts": {
-		"start": "micro --listen tcp://127.0.0.1:3001",
-		"test": "xo && nyc ava",
-		"dev": "micro-dev"
+		"dev": "micro-dev",
+    "start": "micro --listen tcp://127.0.0.1:3001",
+    "report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+		"test": "xo && nyc ava"
 	},
 	"files": [
 		"index.js",
@@ -27,6 +28,7 @@
 		"books",
 		"goodreads",
 		"google-books",
+		"literature",
 		"microservice",
 		"read",
 		"read-list",
@@ -40,15 +42,15 @@
 		"xml2js": "^0.4.19"
 	},
 	"devDependencies": {
-		"ava": "^0.25.0",
+		"ava": "^1.4.1",
 		"codecov": "^3.0.0",
 		"delay": "^4.1.0",
 		"got": "^9.3.1",
 		"micro-dev": "^3.0.0",
 		"nock": "^10.0.1",
-		"nyc": "^13.1.0",
+		"nyc": "^14.1.0",
 		"test-listen": "^1.1.0",
-		"xo": "^0.23.0"
+		"xo": "^0.24.0"
 	},
 	"nyc": {
 		"reporter": [
