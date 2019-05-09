@@ -8,7 +8,7 @@ const {parseString} = require('xml2js');
 const transformBook = require('./transform-book');
 
 const cache = `max-age=${Number(process.env.CACHE_MAX_AGE) || 300}`;
-const MAX_BOOKS = Number(process.env.MAX_REPOS) || 10;
+const MAX_BOOKS = Number(process.env.MAX_BOOKS) || 10;
 const {
   ACCESS_ALLOW_ORIGIN: origin,
   GOODREADS_API_KEY,
@@ -90,7 +90,9 @@ module.exports = (request, response) => {
   if (request.headers.etag === responseETag) {
     response.statusCode = 304;
     response.end();
+
     return;
   }
+
   response.end(responseText);
 };
