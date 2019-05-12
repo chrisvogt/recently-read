@@ -15,8 +15,8 @@
 	},
 	"scripts": {
 		"dev": "micro-dev",
-    "start": "micro --listen tcp://127.0.0.1:3001",
-    "report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+		"start": "micro --listen tcp://127.0.0.1:3001",
+		"report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
 		"test": "xo && nyc ava"
 	},
 	"files": [

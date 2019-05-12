@@ -43,7 +43,7 @@ const GOOGLE_API = `https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&ke
 async function getRecentlyReadBooks() {
   try {
     const reviews = await fetchReviews(GOODREADS_API_KEY, GOODREADS_LIST_ID);
-    const isbns = reviews.reduce(reviewToIsbn);
+    const isbns = reviews.reduce(reviewToIsbn, []);
 
     const bookPromises = isbns.map(isbn => got(GOOGLE_API.replace('{isbn}', isbn)));
     const bookResults = await Promise.all(bookPromises);
@@ -52,7 +52,7 @@ async function getRecentlyReadBooks() {
     responseText = JSON.stringify(books);
     responseETag = etag(responseText);
   } catch (error) {
-    console.log('Error fetching reviews data.', error);
+    console.log(error);
   }
 }
 
