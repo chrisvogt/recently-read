@@ -2,10 +2,10 @@
 
 const controlAccess = require('control-access');
 const etag = require('etag');
-const got = require('got');
 
+const fetchBook = require('./lib/fetch-book');
 const fetchReviews = require('./lib/fetch-reviews');
-const reviewToIsbn = require('./lib/review-to-isbn');
+const transformReview = require('./lib/transform-review');
 const transformBook = require('./lib/transform-book');
 
 const cache = `max-age=${Number(process.env.CACHE_MAX_AGE) || 300}`;
@@ -38,16 +38,14 @@ if (!origin) {
 let responseText = '[]';
 let responseETag = '';
 
-const GOOGLE_API = `https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key=${GOOGLE_BOOKS_API_KEY}`;
-
 async function getRecentlyReadBooks() {
   try {
     const reviews = await fetchReviews(GOODREADS_API_KEY, GOODREADS_LIST_ID);
-    const isbns = reviews.reduce(reviewToIsbn, []);
+    const isbns = reviews.reduce(transformReview, []);
 
-    const bookPromises = isbns.map(isbn => got(GOOGLE_API.replace('{isbn}', isbn)));
+    const bookPromises = isbns.map(book => fetchBook(GOOGLE_BOOKS_API_KEY, book));
     const bookResults = await Promise.all(bookPromises);
-    const books = bookResults.map(transformBook).filter(book => Boolean(book)).slice(0, MAX_BOOKS);
+    const books = bookResults.filter(({book} = {}) => Boolean(book)).map(transformBook).slice(0, MAX_BOOKS);
 
     responseText = JSON.stringify(books);
     responseETag = etag(responseText);
