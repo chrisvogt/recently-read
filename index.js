@@ -2,10 +2,11 @@
 
 const controlAccess = require('control-access');
 const etag = require('etag');
-const got = require('got');
-const {parseString} = require('xml2js');
 
-const transformBook = require('./transform-book');
+const fetchBook = require('./lib/fetch-book');
+const fetchReviews = require('./lib/fetch-reviews');
+const transformReview = require('./lib/transform-review');
+const transformBook = require('./lib/transform-book');
 
 const cache = `max-age=${Number(process.env.CACHE_MAX_AGE) || 300}`;
 const MAX_BOOKS = Number(process.env.MAX_BOOKS) || 10;
@@ -16,7 +17,6 @@ const {
   GOOGLE_BOOKS_API_KEY
 } = process.env;
 
-const isString = subject => typeof subject === 'string';
 const ONE_DAY = 1000 * 60 * 60 * 24;
 
 if (!GOODREADS_API_KEY) {
@@ -38,52 +38,28 @@ if (!origin) {
 let responseText = '[]';
 let responseETag = '';
 
-const GOOGLE_API = `https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key=${GOOGLE_BOOKS_API_KEY}`;
-
-async function fetchLatest() {
+async function getRecentlyReadBooks() {
   try {
-    const {body} = await got(`https://www.goodreads.com/review/list/${GOODREADS_LIST_ID}.xml?key=${GOODREADS_API_KEY}&v=2&shelf=read&sort=date_read`);
+    const reviews = await fetchReviews(GOODREADS_API_KEY, GOODREADS_LIST_ID);
+    const isbns = reviews.reduce(transformReview, []);
 
-    const reviews = await new Promise((resolve, reject) => {
-      parseString(body, (error, result) => {
-        if (error) {
-          reject(error);
-        }
-
-        const reviews = result.GoodreadsResponse.reviews[0].review;
-        resolve(reviews);
-      });
-    });
-
-    const isbns = reviews
-      .filter(({read_at: readAt}) => {
-        const [date] = readAt;
-        return isString(date) && date.length > 3;
-      })
-      .map(({book}) => {
-        const [{isbn: isbnArr = [], isbn13: isbn13Arr = []}] = book;
-        const [isbn] = isbnArr;
-        const [isbn13] = isbn13Arr;
-        return isString(isbn) ? isbn : isString(isbn13) ? isbn13 : false;
-      })
-      .filter(isbn => isString(isbn));
-
-    const bookPromises = isbns.map(isbn => got(GOOGLE_API.replace('{isbn}', isbn)));
+    const bookPromises = isbns.map(book => fetchBook(GOOGLE_BOOKS_API_KEY, book));
     const bookResults = await Promise.all(bookPromises);
-    const books = bookResults.map(transformBook).filter(book => Boolean(book)).slice(0, MAX_BOOKS);
+    const books = bookResults.filter(({book} = {}) => Boolean(book)).map(transformBook).slice(0, MAX_BOOKS);
 
     responseText = JSON.stringify(books);
     responseETag = etag(responseText);
   } catch (error) {
-    console.log('Error fetching reviews data.', error);
+    console.log(error);
   }
 }
 
-setInterval(fetchLatest, ONE_DAY);
-fetchLatest();
+setInterval(getRecentlyReadBooks, ONE_DAY);
+getRecentlyReadBooks();
 
 module.exports = (request, response) => {
   controlAccess()(request, response);
+
   response.setHeader('cache-control', cache);
   response.setHeader('etag', responseETag);
 
